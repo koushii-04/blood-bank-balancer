@@ -230,7 +230,7 @@ export const TransfersPage = () => {
                   <th className="py-3.5 px-4">Distance</th>
                   <th className="py-3.5 px-4">Priority</th>
                   <th className="py-3.5 px-4">Current Status</th>
-                  <th className="py-3.5 px-4 text-right">Atomic Actions</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
