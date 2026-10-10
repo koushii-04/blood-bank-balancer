@@ -221,7 +221,7 @@ export const InventoryPage = () => {
                   <th className="py-3.5 px-4">Blood Group</th>
                   <th className="py-3.5 px-4">Component</th>
                   <th className="py-3.5 px-4">Stock Units</th>
-                  <th className="py-3.5 px-4">Collection Date</th>
+                  {/* <th className="py-3.5 px-4">Collection Date</th> */}
                   <th className="py-3.5 px-4">Expiry Timeline</th>
                   <th className="py-3.5 px-4">Status & Actions</th>
                 </tr>
@@ -254,9 +254,9 @@ export const InventoryPage = () => {
                       <td className="py-3.5 px-4 font-extrabold text-sm text-white">
                         {item.units_available} units
                       </td>
-                      <td className="py-3.5 px-4 text-slate-400 font-mono">
+                      {/* <td className="py-3.5 px-4 text-slate-400 font-mono">
                         {item.collection_date}
-                      </td>
+                      </td> */}
                       <td className="py-3.5 px-4">
                         <div className={`font-mono ${isExpired ? 'text-red-400 line-through' : 'text-slate-200'}`}>
                           {item.expiry_date}
