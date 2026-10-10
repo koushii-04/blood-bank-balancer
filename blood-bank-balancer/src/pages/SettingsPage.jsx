@@ -366,7 +366,7 @@ export const SettingsPage = () => {
           Alert & Automation
         </button>
 
-        <button
+        {/* <button
           onClick={() => { setActiveTab('api'); setFeedback({ type: '', message: '' }); }}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
             activeTab === 'api'
@@ -376,7 +376,7 @@ export const SettingsPage = () => {
         >
           <Key className="w-4 h-4" />
           HIS API Tokens
-        </button>
+        </button> */}
       </div>
 
       {/* TAB 1: PERSONAL PROFILE */}
@@ -815,67 +815,6 @@ export const SettingsPage = () => {
               </button>
             </div>
           </form>
-        </div>
-      )}
-
-      {/* TAB 4: API & HIS INTEGRATION KEYS */}
-      {activeTab === 'api' && (
-        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-          <div className="pb-4 border-b border-slate-800">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Key className="w-4 h-4 text-rose-400" />
-              Hospital Information System (HIS) API Integration Credentials
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {/* Secure tokens for external hospital systems (Cerner, Epic, custom HIS) to push automated blood batch updates. */}
-            </p>
-          </div>
-
-          <div className="space-y-4 text-xs">
-            <div>
-              <label className="block font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                Facility Secret API Key
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={`his_key_${user?.facility?.facility_id || 'reg'}_${btoa(user?.email || 'api').slice(0, 16)}`}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 font-mono text-slate-200 text-xs"
-                />
-                <button
-                  type="button"
-                  onClick={handleCopyApiToken}
-                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 flex items-center gap-1.5 shrink-0 cursor-pointer"
-                >
-                  {copiedKey ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  {copiedKey ? 'Copied!' : 'Copy Key'}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-                Webhook Sync Endpoint URL
-              </label>
-              <input
-                type="text"
-                readOnly
-                value={`${window.location.origin}/api/his/sync-inventory`}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 font-mono text-slate-400 text-xs"
-              />
-            </div>
-
-            {/* <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2 text-slate-400 text-[11px]">
-              <div className="text-slate-200 font-bold text-xs flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-rose-400" />
-                Security & Atomic Concurrency
-              </div>
-              <p className="leading-relaxed">
-                External batch uploads are authenticated using this token. All updates execute in atomic SQLite/MySQL transactions with row-level locks, ensuring seamless synchronization with in-house hospital databases.
-              </p>
-            </div> */}
-          </div>
         </div>
       )}
     </div>
