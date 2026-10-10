@@ -67,14 +67,14 @@ export const LoginPage = ({ onSwitchToSignup }) => {
       <div className="max-w-md w-full space-y-6 relative z-10">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600 to-red-500 shadow-xl shadow-rose-950 relative -top-30">
-            <Activity className="w-7 h-7 text-white animate-pulse" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600 to-red-500 shadow-xl shadow-rose-950 relative -top-30 -z-10">
+            <Activity className="w-7 h-7 text-white animate-pulse " />
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight -mt-30">
             Inter-Clinic Blood Bank Balancer
           </h1>
           <p className="text-xs sm:text-sm text-slate-400">
-            Real-Time Geospatial Inventory Routing & Concurrency Engine
+            {/* Real-Time Geospatial Inventory Routing & Concurrency Engine */}
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export const LoginPage = ({ onSwitchToSignup }) => {
                 </>
               ) : (
                 <>
-                  Sign In with JWT
+                  Sign In
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
