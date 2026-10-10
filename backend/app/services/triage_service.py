@@ -81,7 +81,7 @@ def perform_geospatial_triage(
         db.query(Inventory, Facility)
         .join(Facility, Inventory.facility_id == Facility.facility_id)
         .filter(
-            Facility.facility_id != requesting_facility.facility_id,
+            # Facility.facility_id != requesting_facility.facility_id,
             Facility.is_active == True,
             Inventory.blood_group == query.blood_group,
             Inventory.component_type == query.component_type,
@@ -103,8 +103,8 @@ def perform_geospatial_triage(
         )
 
         # Check radius constraint
-        if query.max_radius_km and dist_km > query.max_radius_km:
-            continue
+        # if query.max_radius_km and dist_km > query.max_radius_km:
+        #     continue
 
         days_until_expiry = (inventory.expiry_date - today).days
         is_expiring_soon = days_until_expiry <= 3  # <= 72 hours

@@ -163,3 +163,22 @@ def update_inventory_batch(
     db.commit()
     db.refresh(item)
     return enrich_inventory_item(item)
+
+@router.delete("/{inventory_id}")
+def delete_inventory_batch(
+    inventory_id: int,
+    db: Session = Depends(get_db),
+    current_user: UserAccount = Depends(get_current_user)
+):
+    """Manually removes an expired or invalid blood batch from the database."""
+    item = db.query(Inventory).filter(Inventory.inventory_id == inventory_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Inventory item not found")
+
+    # Security check: Ensure staff can only delete from their own facility (unless Admin)
+    if current_user.role != UserRole.ADMIN and item.facility_id != current_user.facility_id:
+        raise HTTPException(status_code=403, detail="Cannot delete inventory from other facilities")
+
+    db.delete(item)
+    db.commit()
+    return {"status": "success", "message": f"Batch #{inventory_id} removed completely."}

@@ -16,6 +16,7 @@ class UserAccount(Base):
     facility_id = Column(Integer, ForeignKey("facilities.facility_id", ondelete="CASCADE"), nullable=True)
     full_name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
+    phone_number = Column(String(50), nullable=True)
     password_hash = Column(String(255), nullable=False)
     role = Column(Enum(UserRole), default=UserRole.CLINIC_STAFF, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)

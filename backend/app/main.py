@@ -3,10 +3,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.config import settings
-from backend.app.database import engine, Base
+from backend.app.database import engine, Base, init_db, SessionLocal
 from backend.app.seed_data import seed_database
 from backend.app.services.cron_service import start_cron_scheduler, shutdown_cron_scheduler
 from backend.app.routers import auth, facilities, inventory, triage, transfers, alerts, his, ws
+from sqlalchemy import text
 
 # Configure logging
 logging.basicConfig(
@@ -19,8 +20,8 @@ logger = logging.getLogger("blood_bank_api")
 async def lifespan(app: FastAPI):
     # Startup: Create tables if not exist and seed initial database
     logger.info("Initializing Inter-Clinic Blood Bank Balancer Database...")
-    Base.metadata.create_all(bind=engine)
-    seed_database()
+    init_db()
+    # seed_database()
     
     # Start automated expiry cron scheduler
     start_cron_scheduler()
@@ -75,3 +76,17 @@ def health_check():
             "External Hospital Information System (HIS) API Integration"
         ]
     }
+
+@app.get("/facilities")
+def get_facilities():
+    db = SessionLocal()
+
+    result = db.execute(
+        text("SELECT * FROM facilities")
+    )
+
+    facilities = result.mappings().all()
+
+    db.close()
+
+    return facilities
