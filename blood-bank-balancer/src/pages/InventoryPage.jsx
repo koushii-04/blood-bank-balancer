@@ -228,9 +228,22 @@ export const InventoryPage = () => {
               </thead>
 
               <tbody className="divide-y divide-slate-800/60">
-                {inventories.map((item) => {
-                  const todayStr = new Date().toISOString().split('T')[0];
-                  const isExpired = item.expiry_date < todayStr;
+                {inventories
+  .filter((item) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isExpired = item.expiry_date < todayStr || item.status === 'EXPIRED';
+    
+    // If the user explicitly selects "EXPIRED" from the status filter dropdown, show them
+    if (selectedStatus === 'EXPIRED') {
+      return isExpired;
+    }
+    
+    // Otherwise, hide expired records by default
+    return !isExpired;
+  })
+  .map((item) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isExpired = item.expiry_date < todayStr;
 
                   return (
                     <tr

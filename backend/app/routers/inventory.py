@@ -36,6 +36,7 @@ def get_inventory_list(
 ):
     """
     Returns inventory list.
+    Excludes expired batches by default unless explicitly filtered by status=EXPIRED.
     If regular staff and not requesting all facilities, scopes to current user's facility.
     """
     query = db.query(Inventory).join(Facility, Inventory.facility_id == Facility.facility_id)
@@ -50,10 +51,27 @@ def get_inventory_list(
     if blood_group:
         query = query.filter(Inventory.blood_group == blood_group)
 
-    if status:
-        query = query.filter(Inventory.status == status)
-
     today = date.today()
+
+    # Status & Expiry Handling
+    if status == InventoryStatus.EXPIRED:
+        # User explicitly asked to view expired batches
+        query = query.filter(
+            (Inventory.status == InventoryStatus.EXPIRED) | (Inventory.expiry_date < today)
+        )
+    elif status:
+        # Specific active status selected (e.g., AVAILABLE, RESERVED, IN_TRANSIT)
+        query = query.filter(
+            Inventory.status == status,
+            Inventory.expiry_date >= today
+        )
+    else:
+        # Default view: hide expired records (by status or elapsed date)
+        query = query.filter(
+            Inventory.status != InventoryStatus.EXPIRED,
+            Inventory.expiry_date >= today
+        )
+
     if expiring_soon_only:
         threshold = today + timedelta(days=3)
         query = query.filter(
@@ -73,8 +91,16 @@ def get_inventory_summary(
 ):
     """
     Returns high-level blood supply summary by blood group, total units, and expiring counts.
+    Strictly excludes expired units from the total available counts.
     """
-    query = db.query(Inventory).filter(Inventory.status == InventoryStatus.AVAILABLE)
+    today = date.today()
+    threshold = today + timedelta(days=3)
+
+    # Base query: Only active statuses and dates in the future/present
+    query = db.query(Inventory).filter(
+        Inventory.status == InventoryStatus.AVAILABLE,
+        Inventory.expiry_date >= today
+    )
     
     if current_user.role != UserRole.ADMIN and not scope_facility_id:
         if current_user.facility_id:
@@ -83,8 +109,6 @@ def get_inventory_summary(
         query = query.filter(Inventory.facility_id == scope_facility_id)
 
     items = query.all()
-    today = date.today()
-    threshold = today + timedelta(days=3)
 
     summary_by_group = {bg.value: {"blood_group": bg.value, "total_units": 0, "expiring_soon_units": 0} for bg in BloodGroup}
     total_regional_units = 0
@@ -94,7 +118,9 @@ def get_inventory_summary(
         bg = item.blood_group.value
         summary_by_group[bg]["total_units"] += item.units_available
         total_regional_units += item.units_available
-        if today <= item.expiry_date <= threshold:
+        
+        # We already filtered out expired batches, so just check the upper threshold
+        if item.expiry_date <= threshold:
             summary_by_group[bg]["expiring_soon_units"] += item.units_available
             total_expiring_soon += item.units_available
 
@@ -103,7 +129,7 @@ def get_inventory_summary(
         "total_expiring_soon_units": total_expiring_soon,
         "groups": list(summary_by_group.values())
     }
-
+    
 @router.post("", response_model=InventoryResponse)
 def add_inventory_batch(
     inv_in: InventoryCreate,
