@@ -21,6 +21,8 @@ export const WebSocketProvider = ({ children }) => {
       return;
     }
 
+    let isMounted = true; // 1. ADD THIS FLAG
+
     const channel = user.facility_id ? `facility_${user.facility_id}` : 'global';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/${channel}`;
@@ -32,7 +34,6 @@ export const WebSocketProvider = ({ children }) => {
         socket.onopen = () => {
           setIsConnected(true);
           console.log(`WebSocket connected to ${channel}`);
-          // Send ping heartbeat every 20s
           pingIntervalRef.current = setInterval(() => {
             if (socket.readyState === WebSocket.OPEN) {
               socket.send('ping');
@@ -47,7 +48,6 @@ export const WebSocketProvider = ({ children }) => {
             setLiveAlerts((prev) => [data, ...prev].slice(0, 30));
             setUnreadCount((prev) => prev + 1);
 
-            // Optional: Web Audio beep for emergency alerts
             try {
               if (data.event === 'NEW_TRANSFER_REQUEST' || data.event === 'EXPIRY_WARNING') {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -62,19 +62,19 @@ export const WebSocketProvider = ({ children }) => {
                 osc.start();
                 osc.stop(ctx.currentTime + 0.5);
               }
-            } catch (audioErr) {
-              // Audio context might be restricted before user gesture
-            }
-          } catch (err) {
-            // Ignore non-json responses (e.g. pong)
-          }
+            } catch (audioErr) {}
+          } catch (err) {}
         };
 
         socket.onclose = () => {
           setIsConnected(false);
           clearInterval(pingIntervalRef.current);
-          console.log('WebSocket disconnected. Reconnecting in 3s...');
-          setTimeout(connectWs, 3000);
+          
+          // 2. ONLY RECONNECT IF THE COMPONENT IS STILL MOUNTED
+          if (isMounted) {
+            console.log('WebSocket disconnected. Reconnecting in 3s...');
+            setTimeout(connectWs, 3000);
+          }
         };
 
         socket.onerror = (err) => {
@@ -91,6 +91,7 @@ export const WebSocketProvider = ({ children }) => {
     connectWs();
 
     return () => {
+      isMounted = false; // 3. FLIP FLAG ON UNMOUNT SO ONCLOSE DOESN'T RECONNECT
       clearInterval(pingIntervalRef.current);
       if (wsRef.current) {
         wsRef.current.close();

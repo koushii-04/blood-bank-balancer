@@ -23,7 +23,7 @@ export const TransfersPage = () => {
   const { user } = useAuth();
   const { latestEvent } = useWebSocket();
   const [transfers, setTransfers] = useState([]);
-  const [activeTab, setActiveTab] = useState('incoming'); // 'incoming', 'outgoing', 'all'
+  const [activeTab, setActiveTab] = useState('all'); // 'incoming', 'outgoing', 'all'
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const [actionFeedback, setActionFeedback] = useState({ type: '', message: '' });
@@ -243,9 +243,9 @@ export const TransfersPage = () => {
                     <tr key={t.request_id} className="hover:bg-slate-800/30 transition-colors">
                       <td className="py-3.5 px-4 font-mono font-bold text-slate-200">
                         #{t.request_id}
-                        <div className="text-[10px] text-slate-500 font-normal">
+                        {/* <div className="text-[10px] text-slate-500 font-normal">
                           {new Date(t.requested_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </div>
+                        </div> */}
                       </td>
                       <td className="py-3.5 px-4 font-semibold text-slate-200">
                         {t.requesting_facility?.name || `Facility #${t.requesting_facility_id}`}
