@@ -63,7 +63,7 @@ export const Navbar = () => {
           </div>
 
           {/* Quick Demo Switcher Dropdown */}
-          <div className="relative">
+          {/* <div className="relative">
             <button
               onClick={() => { setShowDemoMenu(!showDemoMenu); setShowAlertMenu(false); }}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700/80 border border-slate-700 text-xs font-semibold text-slate-200 transition-colors shadow-sm"
@@ -104,7 +104,7 @@ export const Navbar = () => {
                 </div>
               </div>
             )}
-          </div>
+          </div> */}
 
           {/* Real-Time Alert Tray */}
           <div className="relative">
