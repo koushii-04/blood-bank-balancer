@@ -196,6 +196,59 @@ async def approve_transfer_atomic(
 
     return transfer
 
+# async def transition_transfer_status(
+#     db: Session,
+#     request_id: int,
+#     new_status: TransferStatus,
+#     current_user: UserAccount
+# ) -> TransferRequest:
+#     """
+#     Transitions transfer status (e.g. APPROVED -> IN_TRANSIT -> COMPLETED or REJECTED / CANCELLED).
+#     Handles inventory restoration if cancelled/rejected.
+#     """
+#     transfer = db.query(TransferRequest).filter(TransferRequest.request_id == request_id).first()
+#     if not transfer:
+#         raise HTTPException(status_code=404, detail="Transfer request not found")
+
+#     prev_status = transfer.status
+#     transfer.status = new_status
+#     if new_status in [TransferStatus.COMPLETED, TransferStatus.CANCELLED, TransferStatus.REJECTED]:
+#         transfer.resolved_at = datetime.now(timezone.utc)
+
+#     # If rejected/cancelled after approval, restore inventory units
+#     if new_status in [TransferStatus.CANCELLED, TransferStatus.REJECTED] and prev_status in [TransferStatus.APPROVED, TransferStatus.IN_TRANSIT]:
+#         if transfer.inventory_id:
+#             inv = db.query(Inventory).filter(Inventory.inventory_id == transfer.inventory_id).with_for_update().first()
+#             if inv:
+#                 inv.units_available += transfer.units_requested
+#                 if inv.status == InventoryStatus.RESERVED and inv.units_available > 0:
+#                     inv.status = InventoryStatus.AVAILABLE
+
+#     db.commit()
+#     db.refresh(transfer)
+
+#     # Broadcast notification
+#     await manager.broadcast_to_channel(
+#         f"facility_{transfer.requesting_facility_id}",
+#         {
+#             "event": "TRANSFER_STATUS_CHANGED",
+#             "request_id": transfer.request_id,
+#             "status": new_status.value,
+#             "message": f"Transfer #{transfer.request_id} is now {new_status.value}"
+#         }
+#     )
+#     await manager.broadcast_to_channel(
+#         f"facility_{transfer.supplying_facility_id}",
+#         {
+#             "event": "TRANSFER_STATUS_CHANGED",
+#             "request_id": transfer.request_id,
+#             "status": new_status.value,
+#             "message": f"Transfer #{transfer.request_id} is now {new_status.value}"
+#         }
+#     )
+
+#     return transfer
+
 async def transition_transfer_status(
     db: Session,
     request_id: int,
@@ -204,7 +257,7 @@ async def transition_transfer_status(
 ) -> TransferRequest:
     """
     Transitions transfer status (e.g. APPROVED -> IN_TRANSIT -> COMPLETED or REJECTED / CANCELLED).
-    Handles inventory restoration if cancelled/rejected.
+    Handles inventory restoration if cancelled/rejected, and creates new inventory if completed.
     """
     transfer = db.query(TransferRequest).filter(TransferRequest.request_id == request_id).first()
     if not transfer:
@@ -215,7 +268,7 @@ async def transition_transfer_status(
     if new_status in [TransferStatus.COMPLETED, TransferStatus.CANCELLED, TransferStatus.REJECTED]:
         transfer.resolved_at = datetime.now(timezone.utc)
 
-    # If rejected/cancelled after approval, restore inventory units
+    # 1. If rejected/cancelled after approval, restore inventory units to the sender
     if new_status in [TransferStatus.CANCELLED, TransferStatus.REJECTED] and prev_status in [TransferStatus.APPROVED, TransferStatus.IN_TRANSIT]:
         if transfer.inventory_id:
             inv = db.query(Inventory).filter(Inventory.inventory_id == transfer.inventory_id).with_for_update().first()
@@ -223,6 +276,22 @@ async def transition_transfer_status(
                 inv.units_available += transfer.units_requested
                 if inv.status == InventoryStatus.RESERVED and inv.units_available > 0:
                     inv.status = InventoryStatus.AVAILABLE
+
+    # 2. THE FIX: If completed, create the new blood units for the receiving hospital
+    if new_status == TransferStatus.COMPLETED and transfer.inventory_id:
+        original_batch = db.query(Inventory).filter(Inventory.inventory_id == transfer.inventory_id).first()
+        if original_batch:
+            received_batch = Inventory(
+                facility_id=transfer.requesting_facility_id,
+                blood_group=original_batch.blood_group,
+                component_type=original_batch.component_type,
+                units_available=transfer.units_requested,
+                batch_code=f"{original_batch.batch_code}-RCVD",
+                collection_date=original_batch.collection_date,
+                expiry_date=original_batch.expiry_date,
+                status=InventoryStatus.AVAILABLE
+            )
+            db.add(received_batch)
 
     db.commit()
     db.refresh(transfer)
