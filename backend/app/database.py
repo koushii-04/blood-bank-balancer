@@ -4,17 +4,19 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# Load backend/.env
+# Silently load .env if it exists (for local testing). 
+# On Render, this file won't exist, so it defaults to Render's Environment tab.
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(env_path)
 
+# Fetch the variable from the OS environment
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
     raise RuntimeError(
-        f"DATABASE_URL is not set. Check your .env file at: {env_path}"
+        "DATABASE_URL is missing. If you are on Render, you forgot to add it to the Environment variables tab. If local, check your .env file."
     )
-
+    
 # Engine
 engine = create_engine(
     DATABASE_URL,
